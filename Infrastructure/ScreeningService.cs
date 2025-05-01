@@ -3,7 +3,7 @@ using Npgsql;
 
 namespace Infrastructure;
 
-public class ScreeningService
+public class ScreeningService : IScreeningService
 {
     List<Screening> screenings = new List<Screening>();
     string connString = "Server=localhost;Database=movie_db;User Id=postgres;Password=12345";
@@ -80,6 +80,90 @@ public class ScreeningService
             string cmd = $"Delete from screenings where id = {Id}";
             NpgsqlCommand command = new NpgsqlCommand();
             System.Console.WriteLine(command.ExecuteNonQuery());
+        }
+    }
+
+    public List<Screening> GetAllScreeningSortByDate()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $"Select * from screenings order by screening_time";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Screening screening = new Screening()
+                    {
+                        Id = reader.GetInt32(0),
+                        MovieId = reader.GetInt32(1),
+                        TheaterId = reader.GetInt32(2),
+                        ScreeningTime = reader.GetDateTime(3),
+                        TicketPrice = reader.GetDecimal(4),
+                        AvailableSeats = reader.GetInt32(5),
+                    };
+                    screenings.Add(screening);
+                }
+                return screenings;
+            }
+        }
+    }
+
+    public List<Screening> GetAllFiveScreenings()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $"Select * from screenings Limit 5";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Screening screening = new Screening()
+                    {
+                        Id = reader.GetInt32(0),
+                        MovieId = reader.GetInt32(1),
+                        TheaterId = reader.GetInt32(2),
+                        ScreeningTime = reader.GetDateTime(3),
+                        TicketPrice = reader.GetDecimal(4),
+                        AvailableSeats = reader.GetInt32(5),
+                    };
+                    screenings.Add(screening);
+                }
+                return screenings;
+            }
+        }
+    }
+
+    public List<Screening> GetAllCountScreeningsByMovies()
+    {
+         using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $"Select movie_id, count(*) from screenings Group by movie_id";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Screening screening = new Screening()
+                    {
+                        Id = reader.GetInt32(0),
+                        MovieId = reader.GetInt32(1),
+                        TheaterId = reader.GetInt32(2),
+                        ScreeningTime = reader.GetDateTime(3),
+                        TicketPrice = reader.GetDecimal(4),
+                        AvailableSeats = reader.GetInt32(5),
+                    };
+                    screenings.Add(screening);
+                }
+                return screenings;
+            }
         }
     }
 }

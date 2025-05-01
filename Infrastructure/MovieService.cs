@@ -83,4 +83,91 @@ public class MovieService : IMovieService
             System.Console.WriteLine(command.ExecuteNonQuery());
         }
     }
+
+    public List<Movie> GetAllMoviesByGenre(string genre)
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $"Select * from movies where genre = {genre}";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Movie movie = new Movie()
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Director = reader.GetString(2),
+                        Year = reader.GetInt32(3),
+                        Duration = reader.GetInt32(4),
+                        Genre = reader.GetString(5),
+                        Description = reader.GetString(6),
+                    };
+                    movies.Add(movie);
+                }
+                return movies;
+            }
+        }
+    }
+
+    public List<Movie> GetAllMovieDirector()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $"Select Distinct(director) from movies";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Movie movie = new Movie()
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Director = reader.GetString(2),
+                        Year = reader.GetInt32(3),
+                        Duration = reader.GetInt32(4),
+                        Genre = reader.GetString(5),
+                        Description = reader.GetString(6),
+                    };
+                    movies.Add(movie);
+                }
+                return movies;
+            }
+        }
+    }
+
+    public List<Movie> GetAllMovieSortByYear()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $"Select * from movies order by year desc";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Movie movie = new Movie()
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Director = reader.GetString(2),
+                        Year = reader.GetInt32(3),
+                        Duration = reader.GetInt32(4),
+                        Genre = reader.GetString(5),
+                        Description = reader.GetString(6),
+                    };
+                    movies.Add(movie);
+                }
+                return movies;
+            }
+        }
+    }
 }

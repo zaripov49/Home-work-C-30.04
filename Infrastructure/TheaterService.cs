@@ -3,7 +3,7 @@ using Npgsql;
 
 namespace Infrastructure;
 
-public class TheaterService
+public class TheaterService : ITheaterService
 {
     List<Theater> theaters = new List<Theater>();
     string connString = "Server=localhost;Database=movie_db;User Id=postgres;Password=12345";
