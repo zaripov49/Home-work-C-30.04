@@ -11,4 +11,5 @@ public interface  IScreeningService
     public List<Screening> GetAllScreeningSortByDate();
     public List<Screening> GetAllFiveScreenings();
     public List<Screening> GetAllCountScreeningsByMovies();
+    public List<Screening> GetAllScreeningAvgTicket();
 }

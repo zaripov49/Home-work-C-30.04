@@ -1,4 +1,5 @@
 using Domain;
+using Domain.Dtos;
 using Npgsql;
 
 namespace Infrastructure;
@@ -149,6 +150,191 @@ public class MovieService : IMovieService
             connection.Open();
 
             string cmd = $"Select * from movies order by year desc";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Movie movie = new Movie()
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Director = reader.GetString(2),
+                        Year = reader.GetInt32(3),
+                        Duration = reader.GetInt32(4),
+                        Genre = reader.GetString(5),
+                        Description = reader.GetString(6),
+                    };
+                    movies.Add(movie);
+                }
+                return movies;
+            }
+        }
+    }
+
+    public List<GetMovieDetailDto> GetMovieDetails()
+    {
+        List<GetMovieDetailDto> getMovieDetailDtos = new List<GetMovieDetailDto>();
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select m.title, s.screening_time, th.name
+            from screenings as s
+            JOIN movies as m on s.movie_id = m.id
+            JOIN theaters as th on s.theater_id = th.id";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    GetMovieDetailDto getMovieDetailDto = new GetMovieDetailDto()
+                    {
+                        MovieName = reader.GetString(0),
+                        ScreeningTime = reader.GetDateTime(1),
+                        TheaterName = reader.GetString(2),
+                    };
+                    getMovieDetailDtos.Add(getMovieDetailDto);
+                }
+                return getMovieDetailDtos;
+            }
+        }
+    }
+
+    public List<Movie> GetAllMovieMaxTime()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $"Select * from movies where duration = (Select max(duration) from movies)";
+            NpgsqlCommand command = new NpgsqlCommand();
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Movie movie = new Movie()
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Director = reader.GetString(2),
+                        Year = reader.GetInt32(3),
+                        Duration = reader.GetInt32(4),
+                        Genre = reader.GetString(5),
+                        Description = reader.GetString(6),
+                    };
+                    movies.Add(movie);
+                }
+                return movies;
+            }
+        }
+    }
+
+    public List<Movie> GetAllMovieByTeather()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select m.title, m.director, m.year, m.duration, m.genre, m.description
+                            from screenings as s
+                            JOIN movies as m on s.movie_id = m.id
+                            Group by m.title, m.director, m.year, m.duration, m.genre, m.description, s.movie_id
+                            having count(*) > 1";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Movie movie = new Movie()
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Director = reader.GetString(2),
+                        Year = reader.GetInt32(3),
+                        Duration = reader.GetInt32(4),
+                        Genre = reader.GetString(5),
+                        Description = reader.GetString(6),
+                    };
+                    movies.Add(movie);
+                }
+                return movies;
+            }
+        }
+    }
+
+    public List<GetMoviePriceByTicket> GetMoviePriceByTickets()
+    {
+        List<GetMoviePriceByTicket> getMoviePriceByTickets = new List<GetMoviePriceByTicket>();
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select m.title, sum(t.price) 
+                            from screenings as s
+                            Join movies as m on s.movie_id = m.id
+                            JOIN tickets as t on s.id = t.screening_id";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    GetMoviePriceByTicket getMoviePriceByTicket = new GetMoviePriceByTicket()
+                    {
+                        MovieName = reader.GetString(0),
+                        PriceTicket = reader.GetDecimal(1),
+                    };
+                    getMoviePriceByTickets.Add(getMoviePriceByTicket);
+                }
+                return getMoviePriceByTickets;
+            }
+        }
+    }
+
+    public List<Movie> GetMoviesAvgDuration()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select * from movies
+                            where duration > (
+                                select avg(duration) from movies
+                                )";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Movie movie = new Movie()
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Director = reader.GetString(2),
+                        Year = reader.GetInt32(3),
+                        Duration = reader.GetInt32(4),
+                        Genre = reader.GetString(5),
+                        Description = reader.GetString(6),
+                    };
+                    movies.Add(movie);
+                }
+                return movies;
+            }
+        }
+    }
+
+    public List<Movie> GetAllMovieAvgPrice()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select m.title, m.director, m.year, m.duration, m.genre, m.description, avg(t.price)
+                            from screenings as s
+                            JOIN movies as m on s.movie_id = m.id
+                            Join tickets as t on t.screening_id = s.id
+                            Group by m.title, m.director, m.year, m.duration, m.genre, m.description
+                            ";
             NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
             using (var reader = command.ExecuteReader())
             {

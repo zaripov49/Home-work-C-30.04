@@ -141,11 +141,42 @@ public class ScreeningService : IScreeningService
 
     public List<Screening> GetAllCountScreeningsByMovies()
     {
-         using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
         {
             connection.Open();
 
             string cmd = $"Select movie_id, count(*) from screenings Group by movie_id";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Screening screening = new Screening()
+                    {
+                        Id = reader.GetInt32(0),
+                        MovieId = reader.GetInt32(1),
+                        TheaterId = reader.GetInt32(2),
+                        ScreeningTime = reader.GetDateTime(3),
+                        TicketPrice = reader.GetDecimal(4),
+                        AvailableSeats = reader.GetInt32(5),
+                    };
+                    screenings.Add(screening);
+                }
+                return screenings;
+            }
+        }
+    }
+
+    public List<Screening> GetAllScreeningAvgTicket()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select * from screenings
+                            where ticket_price > (
+                                select avg(ticket_price) from screenings
+                            )";
             NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
             using (var reader = command.ExecuteReader())
             {

@@ -82,4 +82,137 @@ public class TheaterService : ITheaterService
             System.Console.WriteLine(command.ExecuteNonQuery());
         }
     }
+
+    public List<Theater> GetAllTeatherByScreening(int countScreening)
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select th.name, th.location, th.manager, th.capacity
+                            from screenings as s
+                            JOIN theaters as th on s.theater_id = th.id
+                            Group by s.theater_id, th.name, th.location, th.manager, th.capacity
+                            having count(*) > {countScreening}";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Theater theater = new Theater()
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Location = reader.GetString(2),
+                        Manager = reader.GetString(3),
+                        Phone = reader.GetString(4),
+                        CapaCity = reader.GetInt32(5),
+                    };
+                    theaters.Add(theater);
+                }
+                return theaters;
+            }
+        }
+    }
+
+    public List<Theater> GetAllTheaterAvgPrice()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select th.name, th.location, th.manager, th.capacity, Avg(t.price)
+                            from screenings as s
+                            JOIN theaters as th on s.theater_id = th.id
+                            Join tickets as t on s.screening_id =  t.id
+                            Group by s.theater_id, th.name, th.location, th.manager, th.capacity
+                            ";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Theater theater = new Theater()
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Location = reader.GetString(2),
+                        Manager = reader.GetString(3),
+                        Phone = reader.GetString(4),
+                        CapaCity = reader.GetInt32(5),
+                    };
+                    theaters.Add(theater);
+                }
+                return theaters;
+            }
+        }
+    }
+
+    public List<Theater> GetAllTheaterByMovieName(string movieName)
+    {
+         using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select th.name, th.location, th.manager, th.capacity
+                            from screenings as s
+                            JOIN theaters as th on s.theater_id = th.id
+                            Join movies as m on s.movie_id = m.id
+                            where s.movie_id = (
+                                select id from movies
+                                where title = {movieName})
+                            ";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Theater theater = new Theater()
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Location = reader.GetString(2),
+                        Manager = reader.GetString(3),
+                        Phone = reader.GetString(4),
+                        CapaCity = reader.GetInt32(5),
+                    };
+                    theaters.Add(theater);
+                }
+                return theaters;
+            }
+        }
+    }
+
+    public List<Theater> GetAllTheaterByScreening()
+    {
+        using (NpgsqlConnection connection = new NpgsqlConnection(connString))
+        {
+            connection.Open();
+
+            string cmd = $@"Select th.name, th.location, th.manager, th.capacity, count(s.id)
+                            from screenings as s
+                            JOIN theaters as th on s.theater_id = th.id
+                            Join movies as m on s.movie_id = m.id
+                            Group by th.id, th.name, th.location, th.manager, th.capacity
+                            ";
+            NpgsqlCommand command = new NpgsqlCommand(cmd, connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Theater theater = new Theater()
+                    {
+                        Id = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        Location = reader.GetString(2),
+                        Manager = reader.GetString(3),
+                        Phone = reader.GetString(4),
+                        CapaCity = reader.GetInt32(5),
+                    };
+                    theaters.Add(theater);
+                }
+                return theaters;
+            }
+        }
+    }
 }
